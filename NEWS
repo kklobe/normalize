@@ -1,0 +1,186 @@
+                               -*- text -*-
+Please send Normalize bug reports to chrisvaill@gmail.com.
+
+
+Version 0.7.7
+
+* Fixed bug with reading broken wav files with bad sizes
+* Fixed bug causing seg fault on non-PCM wav files
+* Fixed bug with reading wav files that have stuff after the data chunk
+* Fixed Windows "no such file" bug
+* Fixed small memory leak
+* Fixed cosmetic bug with negative gains
+* Fixed bad basename regexp in normalize-mp3 script
+* Fixed --oggdecode option in normalize-mp3 script
+* Turned audiofile support on by default
+* Upgraded to latest GNU autotools
+
+
+Version 0.7.6.1
+
+* Documentation, license, and email address updates.  No code changes.
+
+
+Version 0.7.6
+
+* Fixed off-by-one bug causing any ID3 tag greater than 256 bytes in
+  size to come out corrupt.
+* Several updates and fixes for the normalize-mp3 script, including
+  FLAC support.
+
+
+Version 0.7.5
+
+* Fixed command-line parsing bugs in normalize-mp3 script
+* Fixed problem with reading mp3s with bad CRCs.
+* Fixed cosmetic bug in displaying negative decibel gains
+* Recognize .mp2 files
+* Updated translations
+
+
+Version 0.7.4
+
+* Fixed several bugs in ID3 code that were causing bus errors on
+  ID3v2.2 tags on non-intel architectures.
+* Fixed bug in ID3 version converting routines causing seg faults
+* Fixed ID3 version converting bug causing incorrect conversion for
+  some frames
+
+
+Version 0.7.3
+
+* Fixed bug causing segmentation faults on certain unusual mp3 files
+* Fixed bug causing false FAIL messages on "make check"
+* Fixed bug in frontend message code
+* Upgraded to latest GNU autotools
+
+
+Version 0.7.2
+
+* Fixed a bug that was causing "normalize -bn" to display the wrong
+  volume adjustment on the last line.  The bug was cosmetic, i.e. the
+  correct adjustment was applied if -n was not specified.
+* Fixes to normalize-mp3 script for compatibility with older perl
+  versions.
+
+
+Version 0.7.1
+
+* Overhauled normalize-mp3 script.  Now written in perl, supports
+  batch and mix mode, and doesn't choke on some filenames anymore.
+  Note that the -b option has changed: you must use --bitrate now.
+* Running "normalize -g 0dB X.mp3" now removes the volume adjust info
+* Added experimental --frontend option
+* Fixed bug in gain display with -mn specified
+* Fixed bug in WAV writing code causing problems with oggenc
+* Fixed non-POSIX badness causing BSD compile problems
+* Fixes for OS/2
+* Updated to gettext 0.11
+* Various autoconf updates
+
+
+Version 0.7
+
+* Added optional mad library support, for reading MP3 files
+* Added optional audiofile library support, for reading various audio
+  formats
+* Added support for ID3 tags, to set relative volume adjustment
+  information in MP3 files
+* Added xmms plugin to use ID3 tag information
+* Added -w option to force output sample width
+* Added --no-progress and --query options for frontends
+
+
+Version 0.6.1
+
+* Overhauled normalize-mp3 script.  It now works on ogg vorbis files,
+  and preserves ID3 or ogg tags over the re-encode process.
+* Added normalize-ogg as link to normalize-mp3
+* Fixed build problems on freebsd and cygwin
+
+
+Version 0.6
+
+* Improved limiter (no more clipping!).  Adjustment with limiting is
+  much more accurate.  Limiting is on by default now, so the -c option
+  is deprecated, and the --clipping option has been added to turn
+  limiting off.
+* Added -l option to control limiter.
+* Added -T option to set "don't bother adjusting" threshold
+* Fixed bug giving spurious error message on amiga
+* Fixed bug in printing output when reading from stdin
+* Added -n and -T options to normalize-mp3 script
+* Fixed bug in normalize-mp3 script with certain filenames
+* Made all opens binary for compatibility with cygwin
+* Minor speedup fix
+* Code cleanups
+* Config fixes for compatibility with new versions of automake & autoconf
+
+
+Version 0.5.2
+
+* Fixed bug with -c option.  It was not turning compression on.
+* Fixed bug in dealing with corrupt files.
+
+
+Version 0.5.1
+
+* All gain values in dB, all amplitudes in dBFS (option `--fractions'
+  added to get gains and amplitudes as fractions of 1.0 instead)
+* Added -c option to turn on compression
+* No longer do compression if we don't need to
+* The -n option now prints out peak values and gains
+* Keep track of clippings, even when using lookup table
+* Fixed bugs with 24 and 32 bit WAV files
+* Other minor bugfixes
+
+
+Version 0.5
+
+* Added dynamic range compression instead of clipping
+* Added --peak option to normalize by peak instead of RMS
+* The -a option now also accepts values in decibels less than full
+  scale (dBFS)
+* Speed improvement
+* normalize-mp3 script now skips files that are already normalized
+* Other minor bugfixes and cleanups
+
+
+Version 0.4.1
+
+* Bug fixed: decibel gains supplied to -g option were doubled in v0.4.
+* Bug fixed: report of needed adjustment in dB was halved in v0.4 (it
+  was consistent with -g option bug).  Adjustments calculated by v0.4
+  should not be used with any other version.
+
+
+Version 0.4
+
+* Added ability to compute volume of data from standard input
+* Adjustments now measured in decibels
+* Already-normalized files are now skipped
+* Files are adjusted in place, no longer use temporary files
+* Minor bugfixes
+* Various code cleanups
+
+
+Version 0.3.4
+
+* Bug fixed in handling files less than one second long
+* Added normalize-mp3 script
+* Various code cleanups
+
+
+Version 0.3.3
+
+* Bug fixed in statistical volume analysis for mix mode.
+
+
+Version 0.3.2
+
+* Fix for bug with long filenames.
+
+
+Version 0.3.1
+
+* Initial public release.

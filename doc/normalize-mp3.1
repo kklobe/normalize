@@ -1,0 +1,83 @@
+.TH NORMALIZE-MP3 "1" "September 2001"
+.SH NAME
+normalize-mp3 - adjust levels of mp3 or ogg files by running
+normalize(1), then re-encoding
+.SH SYNOPSIS
+\fB normalize-mp3
+[\fIOPTION\fR]... [\fIFILE\fR]...
+\fB normalize-ogg
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.SH DESCRIPTION
+.PP
+Normalize volume of mp3 or ogg files by decoding, running normalize,
+and re-encoding.  This requires as much extra disk space as the
+largest mp3 or ogg file, decoded.  Note that for batch and mix mode,
+all files must be decoded, so there must be enough disk space for the
+decoded copies of all specified mp3 and ogg files.
+.TP
+\fB\-\-ogg\fR
+Convert files to OGG, regardless of original format
+.TP
+\fB\-\-mp3\fR
+Convert files to MP3, regardless of original format
+.TP
+\fB\-\-bitrate\fR BR
+Set bitrate of re-encoded file (default 128)
+.TP
+\fB\-\-tmpdir\fR TMP
+Put temporary WAV files in temp directory TMP
+.TP
+\fB\-\-notags\fR
+Do not copy ID3 or OGG tags to the output file
+.PP
+The following four options may be used to set the encoder and decoder
+commands for mp3 and ogg vorbis.  %m is expanded to the name of the
+mp3 or vorbis file, %w expands to the name of the temporary WAV file,
+and %b expands to the bitrate, as specified by the --bitrate option.
+Run \fBnormalize-mp3\fR with no arguments to see the default values.
+.TP
+\fB--mp3encode=\fIX\fR
+mp3 encoder
+.TP
+\fB--mp3decode=\fIX\fR
+mp3 decoder
+.TP
+\fB--oggencode=\fIX\fR
+ogg vorbis encoder
+.TP
+\fB--oggdecode=\fIX\fR
+ogg vorbis decoder
+.TP
+\fB\-h\fR
+Display this help and exit.
+.TP
+\fB\-V\fR
+Display version information and exit.
+.TP
+\fBThese arguments are passed as arguments to normalize.
+Run "normalize \fB\-\-help\fR" for more info.
+.TP
+\fB\-a\fR AMP
+.TP
+\fB\-g\fR ADJ
+.TP
+\fB\-n\fR
+.TP
+\fB\-T\fR THR
+.TP
+\fB\-b\fR
+.TP
+\fB\-m\fR
+.TP
+\fB\-v\fR
+.TP
+\fB\-q\fR
+.TP
+.SH "REPORTING BUGS"
+Report bugs to <chrisvaill@gmail.com>.
+.SH "SEE ALSO"
+The
+.B normalize(1)
+Man page
+.SH "NOTES"
+This page was provided by Eduardo Maçan <macan@debian.org>

@@ -1,0 +1,812 @@
+#! @PERL@ -w
+# -*- perl -*-
+# Copyright (C) 1999--2005 Chris Vaill
+# This file is part of normalize.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+#######################################################################
+# These variables may be customized for local setup
+#######################################################################
+
+# %m becomes name of mp3 or ogg file
+# %w becomes name of temporary WAV file
+# %b becomes bitrate of re-encoded file, as specified by the -b option
+# Example: $OGGENCODE="oggenc -Q -b %b -o %m %w"
+
+$MP3DECODE  = "@MP3DECODE@";
+$MP3ENCODE  = "@MP3ENCODE@";
+$OGGDECODE  = "@OGGDECODE@";
+$OGGENCODE  = "@OGGENCODE@";
+$FLACDECODE = "@FLACDECODE@";
+$FLACENCODE = "@FLACENCODE@";
+
+# The %w etc. substitutions should *not* be used in the following, as
+# this script knows about their options already.
+$VORBISCOMMENT = "@VORBISCOMMENT@";
+$METAFLAC      = "@METAFLAC@";
+
+# change this if normalize is not on your path
+$NORMALIZE = "@NORMALIZE_BIN@";
+
+
+#######################################################################
+# No user serviceable parts below
+#######################################################################
+
+use Fcntl;
+
+sub usage {
+    print <<EOF
+Usage: $progname [OPTION]... [FILE]...
+  Normalize volume of mp3, ogg, or flac files by decoding, running
+  normalize, and re-encoding.  This requires as much extra disk space
+  as the largest file, decoded.  Note that for batch and mix mode, all
+  files must be decoded, so there must be enough disk space for the
+  decoded copies of all specified files.
+
+  -a AMP         \\
+  -g ADJ          |
+  -n              |
+  -T THR          |_ These arguments are passed as arguments to normalize.
+  -b              |  Run "normalize --help" for more info.
+  -m              |
+  -v              |
+  -q             /
+
+  --bitrate BR   Set bitrate of re-encoded file [default 128]
+  --tmpdir TMP   Put temporary WAV files in temp directory TMP
+  --notags       Do not copy ID3 or ogg tags to the output file
+  --force-encode Re-encode even if file is already normalized
+  --backup       Keep backups of original files, suffixed with '~'
+
+  Force output format (this disables copying of comment tags):
+
+  --ogg          Convert files to ogg, regardless of original format
+  --mp3          Convert files to mp3, regardless of original format
+  --flac         Convert files to flac, regardless of original format
+
+  The following four options may be used to set the encoder and
+  decoder commands for mp3 and ogg vorbis.  \%m is expanded to the
+  name of the mp3 or vorbis file, \%w expands to the name of the
+  temporary WAV file, and \%b expands to the bitrate, as specified by
+  the --bitrate option.  The default values are shown in brackets
+  below.
+
+  --mp3encode=X  mp3 encoder        [$MP3ENCODE]
+  --mp3decode=X  mp3 decoder        [$MP3DECODE]
+  --oggencode=X  ogg vorbis encoder [$OGGENCODE]
+  --oggdecode=X  ogg vorbis decoder [$OGGDECODE]
+
+  -h             Display this help and exit.
+  -V             Display version information and exit.
+
+Report bugs to <chrisvaill\@gmail.com>.
+EOF
+}
+
+
+# same effect as a backtick, but shell metacharacters are not expanded
+sub backtick_noshell {
+    my @args = @_;
+    my $retval = "";
+    defined(my $pid = open(BABY, "-|")) || die "Can't fork: $!, stopped";
+    if ($pid) {
+	local $SIG{INT} = 'IGNORE';
+	while (<BABY>) {
+	    $retval .= $_;
+	}
+	close BABY;
+    } else {
+	exec(@args) || die "Can't exec $args[0], stopped";
+    }
+    $retval;
+}
+
+
+sub read_tags {
+    my ($fname) = @_;
+    my ($retval, $vorbis_tag, $id3v1_tag, $id3v2_tag, $id3v2_sz);
+
+    if ($fname =~ /\.ogg$/i) {
+	$vorbis_tag = backtick_noshell($VORBISCOMMENT, $fname);
+	defined($vorbis_tag) || die "Can't run vorbiscomment: $!, stopped";
+	$retval = [ 'ogg', $vorbis_tag ];
+
+    } elsif ($fname =~ /\.mp3$/i) {
+	open(IN, $fname) || die "Can't read $fname: $!, stopped";
+	# read ID3v2 tag, if it's there
+	# FIXME: doesn't work for ID3v2.4.0 appended tags
+	read(IN, $id3v2_tag, 3);
+	if ($id3v2_tag eq "ID3") {
+	    read(IN, $id3v2_tag, 7, 3);
+	    # figure tag size
+	    my ($x1, $x2, $x3, $x4) = unpack("x6 C C C C", $id3v2_tag);
+	    my $tagsz = $x1;
+	    $tagsz <<= 7;
+	    $tagsz += $x2;
+	    $tagsz <<= 7;
+	    $tagsz += $x3;
+	    $tagsz <<= 7;
+	    $tagsz += $x4;
+	    read(IN, $id3v2_tag, $tagsz, 10);
+	    $id3v2_sz = $tagsz + 10;
+	} else {
+	    undef $id3v2_tag;
+	    $id3v2_sz = 0;
+	}
+	# read ID3v1 tag, if it's there
+	seek(IN, -128, 2);
+	read(IN, $id3v1_tag, 3);
+	if ($id3v1_tag eq "TAG") {
+	    read(IN, $id3v1_tag, 125, 3);
+	} else {
+	    undef $id3v1_tag;
+	}
+	close(IN);
+
+	$retval = [ 'id3', $id3v1_tag, $id3v2_tag, $id3v2_sz ];
+    } else {
+	$retval = [ 'none' ];
+    }
+
+    $retval;
+}
+
+
+sub write_tags {
+    my ($fname, $tag) = @_;
+
+    if ($fname =~ /\.ogg$/i) {
+	if ($tag->[0] eq 'ogg' && $tag->[1]) {
+	    my @args = ($VORBISCOMMENT, "-a", $fname);
+	    defined(my $pid = open(BABY, "|-"))
+		|| die "Can't fork: $!, stopped";
+	    if ($pid) {
+		local $SIG{INT} = 'IGNORE';
+		print BABY $tag->[1];
+		close BABY;
+		$? == 0 || die "Error running vorbiscomment, stopped";
+	    } else {
+		exec(@args) || die "Can't run vorbiscomment: $!, stopped";
+	    }
+
+	}
+
+    } elsif ($fname =~ /\.mp3$/i) {
+	if ($tag->[0] eq 'id3' && $tag->[1]) {
+	    my $id3v1_tag = $tag->[1];
+	    open(OUT, ">>".$fname)
+		|| die "Can't append tag to $fname: $!, stopped";
+	    syswrite(OUT, $id3v1_tag, 128);
+	    close(OUT);
+	}
+	if ($tag->[0] eq 'id3' && $tag->[2]) {
+	    my ($buf, $tmpfile);
+	    my $id3v2_tag = $tag->[2];
+	    my $id3v2_sz = $tag->[3];
+	    my $n = $$;
+	    while (1) {
+		$tmpfile = $tmpdir.$progname."-".$n.".tag";
+		if (sysopen(OUT, $tmpfile, O_WRONLY|O_CREAT|O_EXCL)) {
+		    last;
+		}
+		$! == EEXIST || die "Can't write $tmpfile: $!, stopped";
+		$n++;
+	    }
+	    syswrite(OUT, $id3v2_tag, $id3v2_sz);
+	    open(IN, $fname) || die "Can't read $fname: $!, stopped";
+	    while ($ret = sysread(IN, $buf, 4096)) {
+		syswrite(OUT, $buf, $ret);
+	    }
+	    close(IN);
+	    close(OUT);
+	    unlink $fname;
+	    rename($tmpfile, $fname)
+		|| die "Can't rename temp file, leaving in $tmpfile, stopped";
+	}
+    }
+}
+
+sub find_prog {
+    my ($prog) = @_;
+    my $retval = undef;
+    my $fullpath;
+
+    @_ = split(/:/, $ENV{PATH});
+    for (@_) {
+	($_ .= "/") unless (/\/$/);
+	$fullpath = $_.$prog;
+	if (-x $fullpath) {
+	    $retval = $fullpath;
+	    last;
+	}
+    }
+
+    $retval;
+}
+
+sub find_mp3decode {
+    my ($path);
+    $path = find_prog("madplay");
+    if ($path) { $path .= " -q -o %w %m"; }
+    unless ($path) {
+	$path = find_prog("mpg123");
+	if ($path) { $path .= " -q -w %w %m"; }
+    }
+    if ($path) { $MP3DECODE = $path; }
+}
+
+sub find_mp3encode {
+    my ($path);
+    $path = find_prog("lame");
+    unless ($path) {
+	$path = find_prog("notlame");
+    }
+    if ($path) { $path .= " --quiet -h -b %b %w %m"; }
+    unless ($path) {
+	$path = find_prog("bladeenc");
+	if ($path) { $path .= " -quiet %w %m"; }
+    }
+    if ($path) { $MP3ENCODE = $path; }
+}
+
+sub find_oggdecode {
+    my ($path);
+    $path = find_prog("oggdec");
+    if ($path) { $path .= " -Q -o %w %m"; }
+    unless ($path) {
+	$path = find_prog("ogg123");
+	if ($path) { $path .= " -q -d wav -f %w %m"; }
+    }
+    if ($path) { $OGGDECODE = $path; }
+}
+
+sub find_oggencode {
+    my ($path);
+    $path = find_prog("oggenc");
+    if ($path) {
+	$path .= " -Q -b %b -o %m %w";
+	$OGGENCODE = $path;
+    }
+}
+
+sub find_vorbiscomment {
+    my ($path);
+    $path = find_prog("vorbiscomment");
+    if ($path) { $VORBISCOMMENT = $path; }
+}
+
+sub find_flacdecode {
+    my ($path);
+    $path = find_prog("flac");
+    if ($path) {
+	$path .= " -s -d -o %w %m";
+	$FLAC = $path;
+    }
+}
+
+sub find_flacencode {
+    my ($path);
+    $path = find_prog("flac");
+    if ($path) {
+	$path .= " -s -o %m %w";
+	$FLAC = $path;
+    }
+}
+
+sub find_metaflac {
+    my ($path);
+    $path = find_prog("metaflac");
+    if ($path) { $METAFLAC = $path; }
+}
+
+
+($progname = $0) =~ s/.*\///;
+$version = "@VERSION@";
+$nomoreoptions = 0;
+
+# default option values
+@normalize_args = ($NORMALIZE, "--frontend", "-T", "0.25");
+$all_to_mp3 = 0;
+$all_to_ogg = 0;
+$all_to_flac = 0;
+$bitrate = 128;
+$do_copy_tags = 1;
+$tmpdir = "";
+$do_adjust = 1;
+$batch_mode = 0;
+$mix_mode = 0;
+$force_encode = 0;
+$keep_backups = 0;
+# we track verbosity separately for this script
+$verbose = 1;
+
+
+# for any helper programs that haven't been specified statically at
+# the top of this file, try to set them dynamically
+find_mp3decode     unless ($MP3DECODE);
+find_mp3encode     unless ($MP3ENCODE);
+find_oggdecode     unless ($OGGDECODE);
+find_oggencode     unless ($OGGENCODE);
+find_vorbiscomment unless ($VORBISCOMMENT);
+find_flacdecode    unless ($FLACDECODE);
+find_flacencode    unless ($FLACENCODE);
+find_metaflac      unless ($METAFLAC);
+
+@infnames = ();
+
+# step through arguments
+$nomoreoptions = 0;
+ARG_LOOP:
+while ($ARGV[0]) {
+    if ($ARGV[0] =~ /^-/ && !$nomoreoptions) {
+	$_ = $ARGV[0];
+
+	if ($_ eq "-a" || $_ eq "--amplitude") {
+	    if ($#ARGV < 1) { print "$progname: option $_ requires an argument\n"; exit 1; }
+	    push @normalize_args, "-a", $ARGV[1];
+	    shift; shift; next ARG_LOOP;
+	} elsif ($_ eq "--bitrate") {
+	    if ($#ARGV < 1) { print "$progname: option $_ requires an argument\n"; exit 1; }
+	    $bitrate = $ARGV[1];
+	    shift; shift; next ARG_LOOP;
+	} elsif ($_ eq "-g" || $_ eq "--gain") {
+	    if ($#ARGV < 1) { print "$progname: option $_ requires an argument\n"; exit 1; }
+	    push @normalize_args, "-g", $ARGV[1];
+	    shift; shift; next ARG_LOOP;
+	} elsif ($_ eq "-n" || $_ eq "--no-adjust") {
+	    push @normalize_args, "-n";
+	    $do_adjust = 0;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "-T" || $_ eq "--adjust-threshold") {
+	    if ($#ARGV < 1) { print "$progname: option $_ requires an argument\n"; exit 1; }
+	    push @normalize_args, "-T", $ARGV[1];
+	    shift; shift; next ARG_LOOP;
+	} elsif ($_ eq "--fractions") {
+	    push @normalize_args, "--fractions";
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--tmp" || $_ eq "--tmpdir") {
+	    if ($#ARGV < 1) { print "$progname: option $_ requires an argument\n"; exit 1; }
+	    $tmpdir = $ARGV[1];
+	    unless (-d $tmpdir) { print "$progname: $tmpdir: no such directory\n"; exit 1; }
+	    if ($tmpdir !~ /\/$/) {
+		$tmpdir = $tmpdir."/";
+	    }
+	    shift; shift; next ARG_LOOP;
+	} elsif ($_ eq "-v" || $_ eq "--verbose") {
+	    push @normalize_args, "-v";
+	    $verbose = 2;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "-b" || $_ eq "--batch") {
+	    push @normalize_args, "-b";
+	    $batch_mode = 1;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "-m" || $_ eq "--mix") {
+	    push @normalize_args, "-m";
+	    $mix_mode = 1;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "-q" || $_ eq "--quiet") {
+	    push @normalize_args, "-q";
+	    $verbose = 0;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--ogg") {
+	    $all_to_ogg = 1;
+	    $all_to_mp3 = 0;
+	    $all_to_flac = 0;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--mp3") {
+	    $all_to_mp3 = 1;
+	    $all_to_ogg = 0;
+	    $all_to_flac = 0;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--flac") {
+	    $all_to_flac = 1;
+	    $all_to_mp3 = 0;
+	    $all_to_ogg = 0;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--force-encode") {
+	    $force_encode = 1;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--backup") {
+	    $keep_backups = 1;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--notags" || $_ eq "--noid3") {
+	    $do_copy_tags = 0;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--mp3encode") {
+	    if ($#ARGV < 1) { print "$progname: option $_ requires an argument\n"; exit 1; }
+	    $MP3ENCODE = $ARGV[1];
+	    shift; shift; next ARG_LOOP;
+	} elsif (/^--mp3encode=/) {
+	    ($MP3ENCODE = $ARGV[0]) =~ s/^.*?=//;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--mp3decode") {
+	    if ($#ARGV < 1) { print "$progname: option $_ requires an argument\n"; exit 1; }
+	    $MP3DECODE = $ARGV[1];
+	    shift; shift; next ARG_LOOP;
+	} elsif (/^--mp3decode=/) {
+	    ($MP3DECODE = $ARGV[0]) =~ s/^.*?=//;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--oggencode") {
+	    if ($#ARGV < 1) { print "$progname: option $_ requires an argument\n"; exit 1; }
+	    $OGGENCODE = $ARGV[1];
+	    shift; shift; next ARG_LOOP;
+	} elsif (/^--oggencode=/) {
+	    ($OGGENCODE = $ARGV[0]) =~ s/^.*?=//;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "--oggdecode") {
+	    if ($#ARGV < 1) { print "$progname: option $_ requires an argument\n"; exit 1; }
+	    $OGGDECODE = $ARGV[1];
+	    shift; shift; next ARG_LOOP;
+	} elsif (/^--oggdecode=/) {
+	    ($OGGDECODE = $ARGV[0]) =~ s/^.*?=//;
+	    shift; next ARG_LOOP;
+	} elsif ($_ eq "-h" || $_ eq "--help") {
+	    usage;
+	    exit 0;
+	} elsif ($_ eq "-V" || $_ eq "--version") {
+	    print "$progname (normalize) $version\n";
+	    exit 0;
+	} elsif ($_ eq "--") {
+	    $nomoreoptions = 1;
+	    shift; next ARG_LOOP;
+	} else {
+	    print "Unrecognized option \"",$ARGV[0],"\"\n";
+	    usage;
+	    exit 1;
+	}
+    }
+
+    push(@infnames, shift);
+}
+
+unless (@infnames) {
+    print STDERR "Error: no files specified\n";
+    print STDERR "Usage: $progname [OPTION]... [FILE]...\n";
+    print STDERR "Try `$progname --help' for more information\n";
+    exit 0;
+}
+
+
+if ($batch_mode || $mix_mode) {
+
+    #
+    # decode all files
+    #
+    @tmpfnames = ();
+    @outfnames = ();
+    for($i = 0; $i <= $#infnames; $i++) {
+	$input_file = $infnames[$i];
+
+	$decoder = undef;
+	if ($input_file =~ /\.mp3$/i) {
+	    $decoder = $MP3DECODE;
+	} elsif ($input_file =~ /\.ogg$/i) {
+	    $decoder = $OGGDECODE;
+	} elsif ($input_file =~ /\.flac$/i) {
+	    $decoder = $FLACDECODE;
+	} else {
+	    print STDERR "$progname: $input_file has unrecognized extension\n";
+	    print STDERR "$progname: Recognized extensions are mp3, ogg, and flac\n";
+	}
+
+	unless ($decoder) {
+	    print STDERR "$progname: $input_file: no decoder available\n";
+	    splice(@infnames, $i, 1);
+	    $i--;
+	    next;
+	}
+
+	# construct temporary file name
+	#   NOTE: There is a race condition here, similar to the C
+	#   tmpnam() function.  We are ignoring it.
+	($filebase = $input_file) =~ s{^.*/}{};
+	$filebase = $tmpdir.$filebase;
+	$n = $$;
+	do {
+	    $tmp_file = $filebase.".".$n.".wav";
+	    $n++;
+	} while (-e $tmp_file);
+	push(@tmpfnames, $tmp_file);
+	# construct output file name
+	($filebase = $input_file) =~ s{^(.*)\..*$}{$1};
+	if ($all_to_mp3) {
+	    $output_file = $filebase.".mp3";
+	} elsif ($all_to_ogg) {
+	    $output_file = $filebase.".ogg";
+	} else {
+	    $output_file = $input_file;
+	}
+	push(@outfnames, $output_file);
+
+	# construct decode command
+	@decode_args = split(/\s+/, $decoder);
+	for (@decode_args) {
+	    s/^\%w$/$tmp_file/;
+	    s/^\%m$/$input_file/;
+	    s/^\%b$/$bitrate/;
+	}
+
+	# save tags
+	$do_copy_tags && ($tagref = read_tags($input_file));
+	push(@tags, $tagref);
+
+	# run decoder
+	$verbose > 0 && print STDERR "Decoding $input_file...\n";
+	if ($verbose < 2) {
+	    open(OLDOUT, ">&STDOUT");
+	    open(STDOUT, ">/dev/null") || die "Can't redirect stdout, stopped";
+	}
+	$ret = system(@decode_args);
+	if ($verbose < 2) {
+	    close(STDOUT);
+	    open(STDOUT, ">&OLDOUT");
+	}
+	$ret == 0 || die "Error decoding, stopped";
+    }
+
+
+    #
+    # normalize all files
+    #
+    $verbose > 0 && print STDERR "Running normalize...\n";
+    @args = (@normalize_args, @tmpfnames);
+    $adjust_needed = $force_encode;
+    defined($pid = open(NORM, "-|")) || die "Can't fork: $!, stopped";
+    if ($pid) {
+	local $SIG{INT} = 'IGNORE';
+	$dummy = 0; # suppress warnings about single use
+	while (<NORM>) {
+	    if (/^ADJUST_NEEDED /) {
+		($dummy, $adjust_needed_here) = split;
+		$adjust_needed = $adjust_needed || $adjust_needed_here;
+	    } elsif (/^LEVEL /) {
+		unless ($do_adjust) {
+		    # with -n specified, the line following a LEVEL line
+		    # is the "level peak gain" line, so print it out
+		    $_ = <NORM>;
+		    print;
+		}
+	    }
+	}
+	close NORM;
+	$? == 0 || die "Error during normalize, stopped";
+    } else {
+	exec(@args) || die "Can't run normalize: $!, stopped";
+    }
+
+
+    #
+    # re-encode all files
+    #
+    if ($do_adjust) {
+	for($i = 0; $i <= $#infnames; $i++) {
+	    $input_file  = $infnames[$i];
+	    $output_file = $outfnames[$i];
+	    $tmp_file    = $tmpfnames[$i];
+	    $tagref      = $tags[$i];
+
+	    # construct encode command
+	    $encoder = undef;
+	    if ($output_file =~ /\.mp3$/i) {
+		$encoder = $MP3ENCODE;
+	    } elsif ($output_file =~ /\.ogg$/i) {
+		$encoder = $OGGENCODE;
+	    } elsif ($output_file =~ /\.flac$/i) {
+		$encoder = $FLACENCODE;
+	    } else {
+		print STDERR "$progname: $output_file has unrecognized extension\n";
+		print STDERR "$progname: Recognized extensions are mp3, ogg, and flac\n";
+	    }
+
+	    unless ($encoder) {
+		print STDERR "$progname: $output_file: no decoder available\n";
+		print STDERR "$progname: leaving output in $tmp_file\n";
+		next;
+	    }
+
+	    @encode_args = split(/\s+/, $encoder);
+	    for (@encode_args) {
+		s/^\%w$/$tmp_file/;
+		s/^\%m$/$output_file/;
+		s/^\%b$/$bitrate/;
+	    }
+
+	    if ($adjust_needed || $input_file ne $output_file) {
+		if ($keep_backups) {
+		    rename($input_file, $input_file."~");
+		} else {
+		    unlink($input_file);
+		}
+		# run encoder
+		$verbose > 0 && print STDERR "Re-encoding $input_file...\n";
+		if ($verbose < 2) {
+		    open(OLDOUT, ">&STDOUT");
+		    open(STDOUT, ">/dev/null")
+			|| die "Can't redirect stdout, stopped";
+		}
+		$ret = system(@encode_args);
+		if ($verbose < 2) {
+		    close(STDOUT);
+		    open(STDOUT, ">&OLDOUT");
+		}
+		$ret == 0 || die "Error encoding, stopped";
+
+		# restore tags, if necessary
+		$do_copy_tags && write_tags($output_file, $tagref);
+	    } else {
+		$verbose > 0 && print "$input_file is already normalized, not re-encoding...\n";
+	    }
+
+	    # delete temp file
+	    unlink $tmp_file || print STDERR "Can't remove $tmp_file: $!\n";
+	}
+    }
+
+    exit 0;
+}
+
+
+#
+# not mix or batch mode
+#
+for $input_file (@infnames) {
+
+    $decoder = $encoder = undef;
+    if ($input_file =~ /\.mp3$/i) {
+	$decoder = $MP3DECODE; $encoder = $MP3ENCODE;
+    } elsif ($input_file =~ /\.ogg$/i) {
+	$decoder = $OGGDECODE; $encoder = $OGGENCODE;
+    } elsif ($input_file =~ /\.flac$/i) {
+	$decoder = $FLACDECODE; $encoder = $FLACENCODE;
+    } else {
+	print STDERR "$progname: $input_file has unrecognized extension\n";
+	print STDERR "$progname: Recognized extensions are mp3, ogg, and flac\n";
+	next;
+    }
+
+    # construct temporary file name
+    #   NOTE: There is a race condition here, similar to the C
+    #   tmpnam() function.  We are ignoring it.
+    ($filebase = $input_file) =~ s{^.*/}{};
+    $filebase = $tmpdir.$filebase;
+    $n = $$;
+    do {
+	$tmp_file = $filebase.".".$n.".wav";
+	$n++;
+    } while (-e $tmp_file);
+    # construct output file name
+    ($filebase = $input_file) =~ s{^(.*)\..*$}{$1};
+    if ($all_to_mp3) {
+	$output_file = $filebase.".mp3";
+	$encoder = $MP3ENCODE;
+    } elsif ($all_to_ogg) {
+	$output_file = $filebase.".ogg";
+	$encoder = $OGGENCODE;
+    } elsif ($all_to_flac) {
+	$output_file = $filebase.".flac";
+	$encoder = $FLACENCODE;
+    } else {
+	$output_file = $input_file;
+    }
+
+    unless ($decoder) {
+	print STDERR "$progname: $input_file: no decoder available\n";
+	next;
+    }
+    unless ($encoder) {
+	print STDERR "$progname: $output_file: no encoder available\n";
+	next;
+    }
+
+    # construct encode and decode commands
+    @decode_args = split(/\s+/, $decoder);
+    for (@decode_args) {
+	s/^\%w$/$tmp_file/;
+	s/^\%m$/$input_file/;
+	s/^\%b$/$bitrate/;
+    }
+    @encode_args = split(/\s+/, $encoder);
+    for (@encode_args) {
+	s/^\%w$/$tmp_file/;
+	s/^\%m$/$output_file/;
+	s/^\%b$/$bitrate/;
+    }
+
+    # save tags
+    $do_copy_tags && ($tagref = read_tags($input_file));
+
+
+    #
+    # run decoder
+    #
+    $verbose > 0 && print STDERR "Decoding $input_file...\n";
+    if ($verbose < 2) {
+	open(OLDOUT, ">&STDOUT");
+	open(STDOUT, ">/dev/null") || die "Can't redirect stdout, stopped";
+    }
+    $ret = system(@decode_args);
+    if ($verbose < 2) {
+	close(STDOUT);
+	open(STDOUT, ">&OLDOUT");
+    }
+    $ret == 0 || die "Error decoding, stopped";
+
+
+    #
+    # run normalize
+    #
+    $verbose > 0 && print STDERR "Running normalize...\n";
+    @args = (@normalize_args, $tmp_file);
+    $adjust_needed = $force_encode;
+    defined($pid = open(NORM, "-|")) || die "Can't fork: $!, stopped";
+    if ($pid) {
+	local $SIG{INT} = 'IGNORE';
+	$dummy = 0; # suppress warnings about single use
+	while (<NORM>) {
+	    if (/^ADJUST_NEEDED /) {
+		($dummy, $adjust_needed_here) = split;
+		$adjust_needed = $adjust_needed || $adjust_needed_here;
+	    } elsif (/^LEVEL /) {
+		unless ($do_adjust) {
+		    # with -n specified, the line following a LEVEL line
+		    # is the "level peak gain" line, so print it out
+		    $_ = <NORM>;
+		    print;
+		}
+	    }
+	}
+	close NORM;
+	$? == 0 || die "Error during normalize, stopped";
+    } else {
+	exec(@args) || die "Can't run normalize: $!, stopped";
+    }
+
+
+    #
+    # run encoder, if necessary
+    #
+    if ($do_adjust) {
+	if ($adjust_needed || $input_file ne $output_file) {
+	    if ($keep_backups) {
+		rename($input_file, $input_file."~");
+	    } else {
+		unlink($input_file);
+	    }
+	    # run encoder
+	    $verbose > 0 && print STDERR "Re-encoding $input_file...\n";
+	    if ($verbose < 2) {
+		open(OLDOUT, ">&STDOUT");
+		open(STDOUT, ">/dev/null")
+		    || die "Can't redirect stdout, stopped";
+	    }
+	    $ret = system(@encode_args);
+	    if ($verbose < 2) {
+		close(STDOUT);
+		open(STDOUT, ">&OLDOUT");
+	    }
+	    $ret == 0 || die "Error encoding, stopped";
+
+	    # restore tags, if necessary
+	    $do_copy_tags && write_tags($output_file, $tagref);
+	} else {
+	    $verbose > 0 && print "$input_file is already normalized, not re-encoding...\n";
+	}
+    }
+
+    # delete temp file
+    unlink $tmp_file || print STDERR "Can't remove $tmp_file: $!\n";
+}

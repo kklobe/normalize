@@ -1,0 +1,478 @@
+# en_GB translations for normalize.
+# Copyright (C) 2005 Chris Vaill
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: normalize\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-09-14 03:41-0400\n"
+"PO-Revision-Date: 2005-07-06 16:43-0400\n"
+"Last-Translator: Chris Vaill\n"
+"Language-Team:\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/adjust.c:128 src/adjust.c:157 src/volume.c:102
+#, c-format
+msgid "%s: I don't know what to do with %d bytes per sample\n"
+msgstr ""
+
+#: src/adjust.c:231
+#, c-format
+msgid "%s: afNewFileSetup failed\n"
+msgstr ""
+
+#: src/adjust.c:237 src/adjust.c:260
+#, c-format
+msgid "%s: afOpenFD failed\n"
+msgstr ""
+
+#: src/adjust.c:396
+#, c-format
+msgid "%s: Warning: no lookup table available; this may be slow...\n"
+msgstr ""
+
+#: src/adjust.c:439
+#, c-format
+msgid "%s: afWriteFrames failed\n"
+msgstr ""
+
+#: src/adjust.c:465
+#, c-format
+msgid "%s: %d clippings performed, %.4f%% loss\n"
+msgstr ""
+
+#: src/adjust.c:471
+#, c-format
+msgid "%s: Warning: lost %0.2f%% of data due to clipping              \n"
+msgstr ""
+
+#: src/adjust.c:484
+#, c-format
+msgid "%s: afSyncFile failed\n"
+msgstr ""
+
+#: src/adjust.c:550 src/mpegadjust.c:152
+#, c-format
+msgid "Applying adjustment of %0.2fdB to %s...\n"
+msgstr ""
+
+#: src/adjust.c:556 src/adjust.c:585
+#, c-format
+msgid "%s: error opening %s: %s\n"
+msgstr ""
+
+#: src/adjust.c:571
+#, c-format
+msgid "%s: error opening temp file: %s\n"
+msgstr ""
+
+#: src/adjust.c:606
+#, c-format
+msgid "%s: error moving %s to %s: %s\n"
+msgstr ""
+
+#: src/getopt.c:684
+#, c-format
+msgid "%s: option `%s' is ambiguous\n"
+msgstr ""
+
+#: src/getopt.c:709
+#, c-format
+msgid "%s: option `--%s' doesn't allow an argument\n"
+msgstr ""
+
+#: src/getopt.c:714
+#, c-format
+msgid "%s: option `%c%s' doesn't allow an argument\n"
+msgstr ""
+
+#: src/getopt.c:732 src/getopt.c:905
+#, c-format
+msgid "%s: option `%s' requires an argument\n"
+msgstr ""
+
+#: src/getopt.c:761
+#, c-format
+msgid "%s: unrecognized option `--%s'\n"
+msgstr "%s: unrecognised option `--%s'\n"
+
+#: src/getopt.c:765
+#, c-format
+msgid "%s: unrecognized option `%c%s'\n"
+msgstr "%s: unrecognised option `%c%s'\n"
+
+#: src/getopt.c:791
+#, c-format
+msgid "%s: illegal option -- %c\n"
+msgstr ""
+
+#: src/getopt.c:794
+#, c-format
+msgid "%s: invalid option -- %c\n"
+msgstr ""
+
+#: src/getopt.c:824 src/getopt.c:954
+#, c-format
+msgid "%s: option requires an argument -- %c\n"
+msgstr ""
+
+#: src/getopt.c:871
+#, c-format
+msgid "%s: option `-W %s' is ambiguous\n"
+msgstr ""
+
+#: src/getopt.c:889
+#, c-format
+msgid "%s: option `-W %s' doesn't allow an argument\n"
+msgstr ""
+
+#: src/mpegadjust.c:102
+#, c-format
+msgid "%s: error reading ID3 tag\n"
+msgstr ""
+
+#: src/mpegadjust.c:109 src/mpegadjust.c:114
+#, c-format
+msgid "%s: error converting tag\n"
+msgstr ""
+
+#: src/mpegadjust.c:121
+#, c-format
+msgid "%s: error writing ID3 tag\n"
+msgstr ""
+
+#: src/mpegvolume.c:371
+#, c-format
+msgid "%s: mad error 0x%04x\n"
+msgstr ""
+
+#: src/mpegvolume.c:375
+#, c-format
+msgid "%s: unrecoverable mad error 0x%04x\n"
+msgstr ""
+
+#: src/normalize.c:100
+#, c-format
+msgid "Usage: %s [OPTION]... [FILE]...\n"
+msgstr ""
+
+#: src/normalize.c:101
+#, c-format
+msgid "Try `%s --help' for more information.\n"
+msgstr ""
+
+#: src/normalize.c:107
+#, c-format
+msgid ""
+"Usage: %s [OPTION]... [FILE]...\n"
+"Normalize volume of multiple audio files\n"
+"\n"
+"  -a, --amplitude=AMP          normalize the volume to the target amplitude\n"
+"                                 AMP [default -12dBFS]\n"
+"  -b, --batch                  batch mode: get average of all levels, and\n"
+"                                 use one adjustment, based on the average\n"
+"                                 level, for all files\n"
+"      --clipping               turn off limiter; do clipping instead\n"
+"      --fractions              display levels as fractions of maximum\n"
+"                                 amplitude instead of decibels\n"
+"  -g, --gain=ADJ               don't compute levels, just apply adjustment\n"
+"                                 ADJ to the files.  Use the suffix \"dB\"\n"
+"                                 to indicate a gain in decibels.\n"
+"  -l, --limiter=LEV            limit all samples above LEV [default -6dBFS]\n"
+"  -m, --mix                    mix mode: get average of all levels, and\n"
+"                                 normalize volume of each file to the\n"
+"                                 average\n"
+"  -n, --no-adjust              compute and display the volume adjustment,\n"
+"                                 but don't apply it to any of the files\n"
+"      --peak                   adjust by peak level instead of using\n"
+"                                 loudness analysis\n"
+"  -q, --quiet                  quiet (decrease verbosity to zero)\n"
+"  -t, --average-threshold=T    when computing average level, ignore any\n"
+"                                 levels more than T decibels from average\n"
+"  -T, --adjust-threshold=T     don't bother applying any adjustment smaller\n"
+"                                 than T decibels\n"
+"  -v, --verbose                increase verbosity\n"
+"  -w, --output-bitwidth=W      force adjusted files to have W-bit samples\n"
+"\n"
+"  -V, --version                display version information and exit\n"
+"  -h, --help                   display this help and exit\n"
+"\n"
+"Report bugs to <chrisvaill@gmail.com>.\n"
+msgstr ""
+"Usage: %s [OPTION]... [FILE]...\n"
+"Normalise volume of multiple audio files\n"
+"\n"
+"  -a, --amplitude=AMP          normalise the volume to the target amplitude\n"
+"                                 AMP [default -12dBFS]\n"
+"  -b, --batch                  batch mode: get average of all levels, and\n"
+"                                 use one adjustment, based on the average\n"
+"                                 level, for all files\n"
+"      --clipping               turn off limiter; do clipping instead\n"
+"      --fractions              display levels as fractions of maximum\n"
+"                                 amplitude instead of decibels\n"
+"  -g, --gain=ADJ               don't compute levels, just apply adjustment\n"
+"                                 ADJ to the files.  Use the suffix \"dB\"\n"
+"                                 to indicate a gain in decibels.\n"
+"  -l, --limiter=LEV            limit all samples above LEV [default -6dBFS]\n"
+"  -m, --mix                    mix mode: get average of all levels, and\n"
+"                                 normalise volume of each file to the\n"
+"                                 average\n"
+"  -n, --no-adjust              compute and display the volume adjustment,\n"
+"                                 but don't apply it to any of the files\n"
+"      --peak                   adjust by peak level instead of using\n"
+"                                 loudness analysis\n"
+"  -q, --quiet                  quiet (decrease verbosity to zero)\n"
+"  -t, --average-threshold=T    when computing average level, ignore any\n"
+"                                 levels more than T decibels from average\n"
+"  -T, --adjust-threshold=T     don't bother applying any adjustment smaller\n"
+"                                 than T decibels\n"
+"  -v, --verbose                increase verbosity\n"
+"  -w, --output-bitwidth=W      force adjusted files to have W-bit samples\n"
+"\n"
+"  -V, --version                display version information and exit\n"
+"  -h, --help                   display this help and exit\n"
+"\n"
+"Report bugs to <chrisvaill@gmail.com>.\n"
+
+#: src/normalize.c:246
+#, c-format
+msgid "%s: normalizing to %f dBFS\n"
+msgstr "%s: normalising to %f dBFS\n"
+
+#: src/normalize.c:256
+#, c-format
+msgid "%s: error: bad target amplitude %f\n"
+msgstr ""
+
+#: src/normalize.c:281
+#, c-format
+msgid "%s: invalid argument to -g option\n"
+msgstr ""
+
+#: src/normalize.c:297
+#, c-format
+msgid "%s: Warning: the -c option is deprecated, and may be removed in v1.0\n"
+msgstr ""
+
+#: src/normalize.c:367
+#, c-format
+msgid ""
+"Copyright (C) 2005 Chris Vaill\n"
+"This is free software; see the source for copying conditions.  There is NO\n"
+"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
+msgstr ""
+
+#: src/normalize.c:372
+#, c-format
+msgid "This copy of normalize is compiled with the following libraries:\n"
+msgstr ""
+
+#: src/normalize.c:390
+#, c-format
+msgid "%s: error: output bitwidth must be between 1 and 32\n"
+msgstr ""
+
+#: src/normalize.c:396
+#, c-format
+msgid "%s: error: the -m and -b options are mutually exclusive\n"
+msgstr ""
+
+#: src/normalize.c:402
+#, c-format
+msgid "%s: error: -m and -b can't be used with the --peak option\n"
+msgstr ""
+
+#: src/normalize.c:423
+#, c-format
+msgid "%s: Warning: stdin specified on command line, not adjusting files\n"
+msgstr ""
+
+#: src/normalize.c:431
+#, c-format
+msgid "%s: file %s: %s\n"
+msgstr ""
+
+#: src/normalize.c:443
+#, c-format
+msgid "%s: no files!\n"
+msgstr ""
+
+#: src/normalize.c:499 src/normalize.c:659
+#, c-format
+msgid "%-12.6f average level\n"
+msgstr ""
+
+#: src/normalize.c:502 src/normalize.c:662
+#, c-format
+msgid "%-12s average level\n"
+msgstr ""
+
+#: src/normalize.c:507
+#, c-format
+msgid "Average level: %0.4f\n"
+msgstr ""
+
+#: src/normalize.c:509
+#, c-format
+msgid "Average level: %0.4fdBFS\n"
+msgstr ""
+
+#: src/normalize.c:553
+#, c-format
+msgid "Files are already normalized, not adjusting..."
+msgstr "Files are already normalised, not adjusting..."
+
+#: src/normalize.c:557
+#, c-format
+msgid "Applying adjustment of %fdB...\n"
+msgstr ""
+
+#: src/normalize.c:559
+#, c-format
+msgid "Applying adjustment of %f...\n"
+msgstr ""
+
+#: src/normalize.c:561
+#, c-format
+msgid "Applying adjustment of %0.2fdB...\n"
+msgstr ""
+
+#: src/normalize.c:588
+#, c-format
+msgid "%s: error applying adjustment to %s: %s\n"
+msgstr ""
+
+#: src/normalize.c:595
+#, c-format
+msgid "%s already normalized, not adjusting..."
+msgstr "%s already normalised, not adjusting..."
+
+#: src/normalize.c:623
+#, c-format
+msgid "%-12f volume adjustment\n"
+msgstr ""
+
+#: src/normalize.c:626
+#, c-format
+msgid "%-12s volume adjustment\n"
+msgstr ""
+
+#: src/normalize.c:723
+#, c-format
+msgid "Computing levels...\n"
+msgstr ""
+
+#: src/normalize.c:727
+#, c-format
+msgid "  level        peak\n"
+msgstr ""
+
+#: src/normalize.c:729
+#, c-format
+msgid "  level        peak         gain\n"
+msgstr ""
+
+#: src/normalize.c:770
+#, c-format
+msgid "%s: error reading %s"
+msgstr ""
+
+#: src/normalize.c:788
+#, c-format
+msgid "File %s has zero power, ignoring...\n"
+msgstr ""
+
+#: src/normalize.c:832
+#, c-format
+msgid "Level for %s: %0.4f (%0.4f peak)\n"
+msgstr ""
+
+#: src/normalize.c:835
+#, c-format
+msgid "Level for %s: %0.4fdBFS (%0.4fdBFS peak)\n"
+msgstr ""
+
+#: src/normalize.c:897
+#, c-format
+msgid "Standard deviation is %0.2f dB\n"
+msgstr ""
+
+#: src/normalize.c:925
+#, c-format
+msgid "Throwing out level of %0.4f (different by %0.2fdB)\n"
+msgstr ""
+
+#: src/normalize.c:928
+#, c-format
+msgid "Throwing out level of %0.4fdBFS (different by %0.2fdB)\n"
+msgstr ""
+
+#: src/normalize.c:947
+#, c-format
+msgid "%s: all files ignored, try using -t 100\n"
+msgstr ""
+
+#: src/normalize.c:1027
+#, c-format
+msgid " %-17s  --%% done, ETA --:--:-- (batch  --%% done, ETA --:--:--)"
+msgstr ""
+
+#: src/normalize.c:1030
+#, c-format
+msgid ""
+" %-17s  --%% done, ETA --:--:-- (batch %3.0f%% done, ETA %02d:%02d:%02d)"
+msgstr ""
+
+#: src/normalize.c:1037
+#, c-format
+msgid ""
+" %-17s %3.0f%% done, ETA %02d:%02d:%02d (batch %3.0f%% done, ETA %02d:%02d:%"
+"02d)"
+msgstr ""
+
+#: src/normalize.c:1084 src/wiener_af.c:149
+#, c-format
+msgid "%s: unable to malloc\n"
+msgstr ""
+
+#: src/wiener_af.c:212 src/wiener_af.c:252
+#, c-format
+msgid "%s: error opening WAV file: %s\n"
+msgstr ""
+
+#: src/wiener_af.c:221
+#, c-format
+msgid "%s: error writing: %s\n"
+msgstr ""
+
+#: src/wiener_af.c:261
+#, c-format
+msgid "%s: error searching for WAV header: %s\n"
+msgstr ""
+
+#: src/wiener_af.c:265
+#, c-format
+msgid "%s: WAV header not found\n"
+msgstr ""
+
+#: src/wiener_af.c:286
+#, c-format
+msgid "%s: this is not a PCM WAV file\n"
+msgstr ""
+
+#: src/wiener_af.c:290
+#, c-format
+msgid "%s: more than 32 bits per sample not implemented\n"
+msgstr ""
+
+#: src/wiener_af.c:314
+#, c-format
+msgid "%s: error searching for WAV data: %s\n"
+msgstr ""
+
+#: src/wiener_af.c:318
+#, c-format
+msgid "%s: WAV data not found\n"
+msgstr ""

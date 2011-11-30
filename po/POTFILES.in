@@ -1,0 +1,11 @@
+# List of files which containing translatable strings.
+
+src/adjust.c
+src/getopt.c
+src/getopt1.c
+src/mpegadjust.c
+src/mpegvolume.c
+src/normalize.c
+src/riff.c
+src/volume.c
+src/wiener_af.c

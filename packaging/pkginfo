@@ -1,0 +1,11 @@
+PKG=CUCSnorm
+NAME=A tool for normalizing the volume of audio files
+ARCH=sparc
+VERSION=0.7.7
+CATEGORY=application
+VENDOR=Chris Vaill
+EMAIL=chrisvaill@gmail.com
+DESC=A tool for normalizing the volume of audio files
+BASEDIR=/usr/local
+XMMSPLUGINDIR=/opt/sfw/lib/xmms/Effect
+CLASSES=none xmms

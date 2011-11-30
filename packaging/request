@@ -1,0 +1,59 @@
+#                               -*- sh -*-
+# request script for normalize
+#
+# This finds where xmms effect plugins should go
+
+PATH=/usr/sadm/bin:${PATH}:/usr/local/bin:/opt/sfw/bin
+
+ask_path () {
+    PROMPT="Path to the XMMS effects plugin directory? "
+    HELP="An effects plugin for XMMS will be installed at the location entered."
+    result=`ckpath -ayw -d "$XMMSPLUGINDIR" -h "$HELP" -p "$PROMPT"`
+    if [ $result = "q" ]; then
+	puttext "Suspending installation at user request."
+	exit 1
+    else
+	XMMSPLUGINDIR="$result"
+    fi
+}
+
+puttext "Normalize includes an effects plugin for XMMS that recognizes
+and honors relative volume adjust tags on MP3 files."
+
+XMMSPLUGINDIR=none
+if type xmms-config > /dev/null 2>&1; then
+    XMMSPLUGINDIR=`xmms-config --effect-plugin-dir`
+
+    puttext "An XMMS effects plugin directory has been found in $XMMSPLUGINDIR."
+    HELP="If you want to install the XMMS plugin in the default location, enter Y."
+    PROMPT="Install in $XMMSPLUGINDIR? "
+    result=`ckyorn -Q -d "a" -h "$HELP" -p "$PROMPT"`
+
+    if [ $result = "n" ]; then
+	XMMSPLUGINDIR="none"
+	ask_path
+    fi
+
+else
+    puttext "I was unable to find XMMS on this system."
+    HELP="If you want to install the XMMS plugin, enter Y."
+    PROMPT="Install the XMMS plugin? "
+    result=`ckyorn -Q -d "a" -h "$HELP" -p "$PROMPT"`
+
+    if [ $result = "n" ]; then
+	CLASSES=none
+    else
+	ask_path
+    fi
+fi
+
+if [ $XMMSPLUGINDIR = "none" ]; then
+    puttext "Not installing XMMS plugin."
+    CLASSES=none
+else
+    puttext "Will install XMMS plugin in $XMMSPLUGINDIR."
+    CLASSES="none xmms"
+fi
+
+echo "XMMSPLUGINDIR=$XMMSPLUGINDIR" >> $1
+echo "CLASSES=$CLASSES" >> $1

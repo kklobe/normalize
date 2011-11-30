@@ -1,0 +1,59 @@
+                                -*- text -*-
+
+Beginning in version 0.7.1, normalize has an option --frontend that
+makes the output very terse, but easy to parse.  The general format of
+frontend output is "<message-type> <arg> [<arg>...]".
+
+These message types are experimental and subject to change.  If you're
+interested in writing a frontend, and there's something you'd like
+added, removed, or changed, email me at chrisvaill@gmail.com.
+
+The current message types are listed below:
+
+NUMFILES <number_of_files>
+  This message comes first, and tells how many FILE messages will
+  follow.
+
+FILE <index> <filename>
+  One of these messages will be printed for each input file.  The
+  index is a number that subsequent messages will use to indicate this
+  particular file.
+
+PROGRESS <file> <batch>
+  *Not implemented*
+  I'd like to provide an indicator of how far in the current operation
+  normalize has progressed.  This is not in place in the code as of
+  v0.7.1, but this is how I expect it to look.  The arguments are
+  numbers indicating percent complete for the current file, and for
+  the whole batch of files.
+
+ANALYZING <index>
+  Normalize is about to begin analyzing the file referred to by index.
+
+LEVEL <index> <level>
+  Analysis of the file is finished, and level is the file's volume, in
+  dBFS.
+
+AVERAGE_EXCLUDES <index> <difference>
+  The file referred to by index is not being considered in the average
+  level.  Its level is different from the average by difference, and
+  is being considered an aberration.
+
+AVERAGE_LEVEL <level>
+  The average level of all the input files, in dBFS.
+
+ADJUSTING <index> <gain>
+  Normalize is about to begin adjusting the file referred to by index,
+  using gain, given in dB.
+
+ADJUSTED <index> <0|1>
+  If the file was actually adjusted, the second argument will be 1.
+  If the adjustment was not applied for a non-error reason (e.g. the
+  gain was too small to be worth applying), it will be 0.
+
+ADJUST_NEEDED <0|1>
+  "ADJUST_NEEDED 1" is printed if a file was adjusted, or if the -n
+  option was given and a file would need adjustment.
+  "ADJUST_NEEDED 0" is printed if the -n option was not given and no
+  file was adjusted, or if -n was given and no file would need
+  adjustment.

@@ -1,0 +1,20 @@
+                               -*- text -*-
+
+For v0.8:
+ - ogg vorbis read support
+ - support for ogg volume adjustment tag
+ - flac read support
+ - in-place mp3/ogg/flac adjustment (?)
+ - implement dithering in adjust
+ - recursive operation
+ - operate in measure,apply,measure,apply order for non-batch, non-mix mode
+ - support other channels in xmms plugin
+ - sanity checks in xmms plugin (e.g. ignore adjustments > 10dB)
+ - use Fletcher-Munson curves to account for effect of pitch
+ - use better method to account for volume of multiple channels
+
+Later:
+ - silence detection (?)
+ - LADSPA plugin (?)
+ - improve limiter - multiband? adaptive?
+ - look into MMX optimizations

@@ -1,0 +1,24 @@
+!search bin lib/locale/fr/LC_MESSAGES lib/locale/en_GB/LC_MESSAGES
+!default 0755 root bin
+i pkginfo
+i copyright
+i request
+d none bin ? ? ?
+f none bin/normalize 0555 root bin
+f none bin/normalize-mp3 0555 root bin
+s none bin/normalize-ogg=normalize-mp3
+d none man ? ? ?
+d none man/man1 ? ? ?
+f none man/man1/normalize.1=man/man1/normalize.1 0444 bin bin
+f none man/man1/normalize-mp3.1=man/man1/normalize-mp3.1 0444 bin bin
+d none lib ? ? ?
+d none lib/locale ? ? ?
+d none lib/locale/fr ? ? ?
+d none lib/locale/fr/LC_MESSAGES ? ? ?
+f none lib/locale/fr/LC_MESSAGES/normalize.mo 0444 root bin
+d none lib/locale/en_GB ? ? ?
+d none lib/locale/en_GB/LC_MESSAGES ? ? ?
+f none lib/locale/en_GB/LC_MESSAGES/normalize.mo 0444 root bin
+d xmms $XMMSPLUGINDIR ? ? ?
+f xmms $XMMSPLUGINDIR/librva.so=lib/xmms/Effect/librva.so 0555 root bin
+f xmms $XMMSPLUGINDIR/librva.la=lib/xmms/Effect/librva.la 0555 root bin

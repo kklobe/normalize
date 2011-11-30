@@ -1,0 +1,188 @@
+Pour les amigaistes :
+Récupérer et installer ixemul.lha disponible sur Aminet afin
+d'améliorer la compatibilité des programmes utilisant ixemul.library.
+En cas de problèmes, me contacter : fr3dy@retemail.es
+
+------------------------------------------------------------------------
+
+Ceci est la version 0.5.2 de Normalize, un ajusteur de volume pour fichier wav.
+Copyleft 2001, Chris Vaill <chrisvaill@gmail.com>
+
+Normalize est un outil excessivement complexe pour ajuster le volume
+de fichiers wave à un volume standard. Cela s'avère utile pour la
+création de compilation de fichiers mp3 dont les niveaux sonores
+d'enregistrement sont différents, provoquant des variations de volume
+d'une chanson à l'autre.
+
+Pour le construire, tapez :
+
+./configure
+make
+make install
+
+Consultez le fichier INSTALL pour plus d'informations.
+Consultez le fichier normalize.1 dans le tiroir man pour les paramères.
+Envoyer les bugs, suggestions et commentaires à chrisvaill@gmail.com
+normalize est freeware. Consultez le fichier COPYING pour sa diffusion.
+
+-------------------------------------------------------------------------
+
+1 Sur quelles plates-formes fonctionne-t-il?
+
+Je l'ai testé sous GNU/Linux sur x86 et sous Solaris sur sparc. J'ai
+entendu dire qu'il fonctionne également sous GNU/Linux sur alpha et
+sur BeOS R5 (en utilisant les options de configuration
+--with-included-gettext et --disable-nls).
+
+J'ai essayé de faire un code aussi portable que possible et
+j'appréçierais de savoir s'il fonctionne sur d'autres plates-formes.
+
+2 A quoi sert-il?
+
+Disons que vous avez une floppée de fichiers wav contenant, selon
+vous, le meilleur d'Elvis Presley et provenant de différents
+albums. Vous voulez créer des fichiers mp3 pour les rajouter à votre
+collection existante mais comme ils proviennent de sources diverses,
+ils sont tous enregistrés à des volumes différents. Si vous avez déjà
+utilisé normalize pour créer votre collection de mp3 (à partir de
+fichiers wav), les fichiers ont tous le même niveau sonore et vous
+voulez que ces nouveaux titres aient également le même volume. Rien de
+plus simple, lancez normalize sans options et chaque titre sera ajusté
+au niveau sonore standard :
+   
+            normalize "Hound Dog.wav" "Blue Suede Shoes.wav" \
+                      "Here Comes Santa Claus.wav" ...
+
+Maintenant supposez que vous venez de récupérer en fichiers wav les
+titres de l'album "Start today" de Gorilla Biscuits, dont vous savez
+qu'il a été enregistré à un volume particulièrement bas. On veut que
+l'album entier soit plus fort mais que chaque piste garde le même
+volume par rapport aux autres. On utilise donc le mode batch. Les
+fichiers sont dénommés 01.wav jusqu'à 14.wav et sont dans le même
+tiroir que normalize. On lance normalize en mode batch pour conserver
+les niveaux sonores relatifs, les autres options sont par défault.
+      
+            normalize -b *.wav
+
+Vous lancez ensuite votre compresseur de mp3 et au final l'album
+complet sera uniformément plus fort.
+
+Maintenant supposez que vous voulez compresser l'album "When Forever
+Comes Crashing" du groupe Converge. Cet album contient un titre, "Ten
+Cents" relativement faible alors que les autres titres sont de volume
+équivalent entre eux et plus fort. On lance normalize en mode batch
+avec l'option v (verbosity) pour voir ce qui se passe :
+
+            > normalize -bv *.wav
+            Je calcule des niveaux...
+            Niveau pour track01.cdda.wav: -9,3980dBFS (0,0000dBFS maximum)
+            Niveau pour track02.cdda.wav: -9,2464dBFS (-0,1538dBFS maximum)
+            Niveau pour track03.cdda.wav: -8,6308dBFS (-0,2520dBFS maximum)
+            Niveau pour track04.cdda.wav: -8,7390dBFS (0,0000dBFS maximum)
+            Niveau pour track05.cdda.wav: -8,1000dBFS (-0,0003dBFS maximum)
+            Niveau pour track06.cdda.wav: -8,2215dBFS (-0,1754dBFS maximum)
+            Niveau pour track07.cdda.wav: -8,9346dBFS (-0,1765dBFS maximum)
+            Niveau pour track08.cdda.wav: -13,6175dBFS (-0,4552dBFS maximum)
+            Niveau pour track09.cdda.wav: -9,0107dBFS (-0,1778dBFS maximum)
+            Niveau pour track10.cdda.wav: -8,1824dBFS (-0,4519dBFS maximum)
+            Niveau pour track11.cdda.wav: -8,5700dBFS (-0,1778dBFS maximum)
+            L'écart type est 1,47 dB
+            Je jette de niveau -13,6175dBFS (différent par 4,58dB)
+            Moyen niveau: -8,6929dBFS
+            Je m'applique le réglage de -3,35dB...
+
+Le volume de "Ten Cents", qui est la piste 8, diffère de la moyenne de
+4.65 decibels, ce qui le classe comme aberration statistique d'après
+la déviation standard de 1.48 decibels. Il n'est donc pas pris en
+compte dans la moyenne mais l'ensemble de l'album est ajusté, y
+compris le titre "Ten Cents". Est considéré comme aberration
+statistique tout fichier ayant un niveau supérieur au double de la
+déviation standard. Ce seuil peut être changé en utilisant l'option
+-t.
+      
+Pour finir, vous voulez faire une compilation de chansons des années
+80 pour votre maman ou quelqu'un d'autre. Vous ne voulez pas que ces
+titres viennent polluer votre collection et donc leurs niveaux sonores
+absolus importent peu du moment qu'ils soient equivalents, pour que
+votre maman n ai pas besoin de régler le volume à chaque titre. On
+lance normalize en mode mix :
+
+            normalize -m *.wav
+
+Ainsi le volume de chaque titre sera ajusté en fonction de la moyenne
+obtenue pour tous ces fichiers et non pas en fonction du niveau par
+défault.
+
+3 Comment ça marche?
+
+Voici juste une petite explication sur la façon dont normalize
+fonctionne, pour les plus curieux.
+
+Les volumes calculés correspondent à des amplitudes RMS correspondant
+grosso modo au volume perçu. Mesurer l'amplitude RMS d'un fichier
+entier n'apporte que peu de renseignements car une chanson douce
+comprenant des parties bruyantes courtes sera toujours une chanson
+douce mais les ajustements feront ressortir encore plus les parties
+bruyantes.
+
+On veut prendre en compte le volume maximum du fichier et ajusté en
+fonction de ce volume. Le signal est divisé en 100 petits morceaux par
+seconde et chaque morceau est analysé de façon à obtenir une
+estimation de la "puissance instantannée" par unité de temps.
+Malheureusement ce signal varie énormément rendant la mesure de la
+puissance maximale du signal original alléatoire donc on applique un
+algorythme sur la puissance du signal (en fait, un filtre moyen avec
+une fenêtre de 100 éléments de large). Le point maximum du signal le
+plus stable reflète bien la puissance du fichier. On prend ensuite la
+racine carrée de la puissance pour obtenir la valeur de l'amplitude
+RMS maximale.
+
+Pour l'amplitude par défaut de 0.25, j'ai trouvé qu'elle était déjà
+assez proche du niveau de la plupart de mes albums mais pas assez pour
+occasionner des coupures dans des albums de volume sonore faible. Vous
+pouvez changer l'amplitude par défaut en fonction de votre collection
+musicale (mais assurez-vous que tout soit ajusté à la même amplitude
+pour avoir le même volume!).
+
+Attention : je ne suis ni un ingénieur acoustique ni un statisticien
+et ma théorie pour le traitement du signal peut être incorrecte. Je
+serais heureux d'avoir le point de vue d'un génie du traitement des
+signaux acoustiques si mes suppositions concernant la puissance du
+signal, le signal perçu, ou sur n'importe quel point de la théorie du
+signal, sont erronées.
+
+4 Pourquoi ne pas utiliser l'ajustement par crête à la place de
+l'ajustement par amplitude RMS?
+
+Cela fonctionnait comme ça dans les versions précédentes (non
+distribuées). J'ai simplement découvert que ça ne fonctionnait pas
+correctement. Le volume perçu par l'oreille correspond plus à une
+amplitude RMS moyenne qu'à un niveau de crête. Par conséquent en
+ajustant deux fichiers à la même amplitude RMS, on obtient un volume
+perçu identique (approximativement identique car certaines fréquences
+paraissent plus fortes à la même amplitude car l'oreille est
+simplement plus sensible a ces fréquences). Il est possible que j'en
+tienne compte dans une version future mais ça implique un tas de
+nouveaux problèmes.
+
+L'ajustement par crête rend normalement les fichiers de gamme
+dynamique restreinte très fort et ne fait rien sur ceux à gamme
+dynamique étendue. Il n'y a pas vraiment d'ajustement, cela ressemble
+plus à l'extension d'un histogramme.  Néanmoins depuis la version 0.5
+vous pouvez utilisez l'option --peak pour l'ajustement par crête.
+
+Au sujet des coupes : depuis la version 0.5.1 l'option -c effectue une
+compression de la gamme dynamique au lieu des coupures ce qui élimine
+complètement les coupures mais donne un volume d'ajustement
+incorrect. Merci à Ted Wright pour cette suggestion.
+
+5 Normalize pourrait-il opérer directement sur des fichiers mp3?
+
+Je ne connais pas grand'chose sur le fonctionnement du mpeg audio,
+mais je crois que pour analyser le volume et spécialement pour le
+manipuler il faut des données audio au format PCM.  Donc pour ajuster
+un fichier mp3, vous devez le décompresser, l'ajuster et le
+re-compresser au risque de subir une deuxième perte due à la
+re-compression. Si cela ne vous pose aucun problème vous pouvez faire
+ces opérations en lançant le script "normalize-mp3" inclus dans la
+distribution.

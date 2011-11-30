@@ -1,0 +1,497 @@
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<!--
+    Copyright (c)  2005  Chris Vaill.
+
+    Permission is granted to copy, distribute, and/or modify this
+    document under the terms of the GNU General Public License as
+    published by the Free Software Foundation; either version 2 of the
+    License, or (at your option) any later version.
+-->
+
+<refentry lang="fr">
+
+<refentryinfo>
+<date>2001-09-16</date>
+</refentryinfo>
+
+<refmeta>
+<refentrytitle>
+<application>normalize</application>
+</refentrytitle>
+<manvolnum>1</manvolnum>
+<!-- <refmiscinfo>normalize 1.0</refmiscinfo> -->
+</refmeta>
+
+<refnamediv>
+<refname>
+<application>normalize</application>
+</refname>
+<refpurpose>
+ajusteur de volume sonore pour fichiers audio.
+	</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<refsynopsisdivinfo>
+<date>2001-09-16</date>
+</refsynopsisdivinfo>
+<cmdsynopsis>
+<command>normalize</command>
+<arg><option><replaceable class="parameter">options</replaceable></option></arg>
+<arg><option>--</option></arg>
+<arg choice="req" rep="repeat"><replaceable class="parameter">file</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+<title>DESCRIPTION</title>
+<para>
+<command>normalize</command> permet d'ajuster le niveau sonore de
+fichiers wav à un niveau standard. Cela peut être utile pour la
+création de discothèque de fichiers mp3, dont les niveaux
+d'enregistrements peuvent être très différents, causant des variations
+de volume plus ou moins importante d'un titre à l'autre.
+	</para>
+<para>
+<command>normalize</command> fonctionne de la façon suivante: dans un
+premier temps, il analyse les fichiers wav et calcule le volume de
+chacun.  Ensuite il effectue un ajustement sur chaque fichier pour les
+amener à un niveau sonore standard ou définit par l'utilisateur.
+	</para>
+<!--
+<para>
+Specificité de la commande "<userinput>normalize -</userinput>".
+<command>normalize</command> lira les données audio à partir de
+l'input standard. Les données sont supposées être en 44.1 kHz, 16 bit
+little-endian, stereo PCM (sans en-tête WAV). Cette commande implique
+également l'option <userinput>-n</userinput> (no adjust).
+	</para>
+-->
+</refsect1>
+
+<refsect1>
+<title>OPTIONS</title>
+<variablelist>
+
+<varlistentry>
+<term>-a, --amplitude=<replaceable class="parameter">AMPLITUDE</replaceable></term>
+<listitem>
+<para>
+Ajuste le niveau RMS à l'amplitude standard qui est de 0.25. Le
+chiffre doit être compris entre 0.0 et 1.0. Si on précise "dB" ou
+"dBFS" on assume que l'amplitude est en décibels sur l'ensemble du
+morceau (0.25 correspond grosso modo à -12 dBFS).
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-b, --batch</term>
+<listitem>
+<para>
+L'ajustement s'effectue en <link linkend="batchmode">mode
+batch</link>. Voir plus bas.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-c, --compression</term>
+<listitem>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+<emphasis>Deprecated</emphasis>.  In previous versions, this enabled
+the limiter, but now the limiter is enabled by default.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--clipping</term>
+<listitem>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+Disable the limiter, and just clip any samples that are too large.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--fractions</term>
+<listitem>
+<para>
+Display all values as decimal fractions instead of in decibels.  By
+default, volume adjustments are shown in decibels, and volume levels
+in dBFS, where 0 dBFS is the level of a square wave of maximum
+amplitude.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-g, --gain=<replaceable class="parameter">GAIN</replaceable></term>
+<listitem>
+<para>
+Saute la première phase: pas d'analyse du niveau sonore de chaque
+fichier. A la place Il applique un gain sur tous les fichiers et agit
+donc comme un multiplicateur. Si l'on spécifie le chiffre en "dB",
+tous les volumes sont ajustés d'autant.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--id3-compat</term>
+<listitem>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+Use this option when adjusting MPEG audio files if your MP3 player
+does not recognize ID3v2.4 tags.  See <link linkend="mpegadjust">MPEG
+AUDIO ADJUSTMENT</link>, below, for details.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--id3-unsync</term>
+<listitem>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+Use this option when adjusting MPEG audio files if your MP3 player
+does not recognize ID3v2 tags and has trouble playing some ID3v2
+tagged MP3 files.  See <link linkend="mpegadjust">MPEG AUDIO
+ADJUSTMENT</link>, below, for details.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-l, --limiter=<replaceable class="parameter">LEVEL</replaceable></term>
+<listitem>
+<para>
+This controls the behavior of the limiter.  By default, all samples
+above -6dBFS (0.5) are limited, but this option sets the limiting
+level to <replaceable>LEVEL</replaceable>. Setting
+<replaceable>LEVEL</replaceable> to 1 (or 0dBFS) does no limiting
+(clipping is done instead); setting <replaceable>LEVEL</replaceable>
+to 0 does limiting on all samples.  The default value is recommended
+unless you know what you're doing.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-m, --mix</term>
+<listitem>
+<para>
+Démarre le <link linkend="mixmode">mode mix</link>. Voir plus bas. A
+noter que les modes batch et mix s'excluent mutuellement.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-n, --no-adjust</term>
+<listitem>
+<para>
+Saute la deuxième phase. Calcule et affiche les ajustements de volume
+nécessaire pour atteindre le niveau définit, sans que les fichiers ne
+soient affectés.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--no-progress</term>
+<listitem>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+Don't print any progress information.  All other messages are printed
+as normal according to the verbosity level.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--peak</term>
+<listitem>
+<para>
+Ajuste en tenant compte des niveaux des crêtes et non pas en fonction
+de l'amplitude RMS.  Chaque fichier sera ajusté de façon à ce que
+l'echantillon le plus élevé soit répercuté sur l'ensemble du
+morceau. Cela donne au fichier un volume maximum sans coupure. Il est
+à noter qu'aucun ajustement n'est opéré (pas de calcul du niveau
+sonore moyen, chaque fichier est ajusté indépendamment des autres).
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--query</term>
+<listitem>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+Change the exit code behavior of <command>normalize</command>.  Mainly
+for use with frontends.
+<itemizedlist>
+<listitem>
+<para>
+Exit code 0: At least one file was adjusted, or if the
+<userinput>-n</userinput> option is used, at least one file would need
+adjustment.
+	</para>
+</listitem>
+<listitem>
+<para>
+Exit code 1: An error was encountered.
+	</para>
+</listitem>
+<listitem>
+<para>
+Exit code 2: No file was adjusted, or if the <userinput>-n</userinput>
+option is used, no file would need adjustment.
+	</para>
+</listitem>
+</itemizedlist>
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-q, --quiet</term>
+<listitem>
+<para>
+N'affiche aucune information sur le status. Les erreurs seules sont
+affichées.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-t, --average-threshold=<replaceable class="parameter">THRESHOLD</replaceable></term>
+<listitem>
+<para>
+En mode batch, définit le seuil en dB à partir duquel les niveaux
+sonores qui sont plus élevés ne seront pas comptés dans la
+moyenne. Une valeur élevée (par exemple 50) permet de s'assurer que
+tous les niveaux sonores seront comptablilisés dans la moyenne.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-T, --adjust-threshold=<replaceable class="parameter">THRESHOLD</replaceable></term>
+<listitem>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+If an adjustment to be made to a file is smaller than
+<replaceable>THRESHOLD</replaceable> decibels, consider the file
+already normalized and don't do the adjustment.  This is 0.125 by
+default, or 0 if the <userinput>-g</userinput> option is given.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-v, --verbose</term>
+<listitem>
+<para>
+Affiche le status du programme. Cette option peut être entrée
+plusieurs fois pour avoir des informations plus conséquentes.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-w, --output-bitwidth</term>
+<listitem>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+Force output files to have samples that are W bits wide.  This option
+is ignored when adjusting MP3 files.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-h, --help</term>
+<listitem>
+<para>
+Affiche la syntaxe et quitte le programme.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-V, --version</term>
+<listitem>
+<para>
+Affiche la version du programme et quitte.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--</term>
+<listitem>
+<para>
+Finit la liste optionnelle.
+	</para>
+</listitem>
+</varlistentry>
+
+</variablelist>
+</refsect1>
+
+<refsect1 id="mixmode">
+<title>MODE MIX</title>
+<para>
+Ce mode est spécialement dédié à la création de compilations sur
+CD. Vous voulez que chaque titre de la compilation ait le même volume,
+mais sans tenir compte s'il a ou non le même volume que les titres de
+la compilation que vous avez gravé la semaine dernière. Dans ce mode,
+un niveau sonore moyen est calculé d'après les echantillons fournis et
+chaque echantillon sera ajusté à ce niveau.
+	</para>
+</refsect1>
+
+<refsect1 id="batchmode">
+<title>MODE BATCH</title>
+<para>
+En travaillant sur un groupe de fichiers de sources diverses, vous
+voulez qu'ils aient tous le même volume, ce qui est le mode par
+défault. En général, on écoute les chansons d'un même album à un
+volume sonore relatif au volume auquel il a été enregistré. En mode
+BATCH, tous les fichiers sont considérés comme faisant parti dans seul
+et même album et leurs niveaux sonores relatifs sont préservés. Ceci
+est effectué en déterminant une moyenne des volumes de tous les
+fichiers et d'en déduire un ajustement unique qui sera appliqué à
+chaque fichier.  Une analyse est effectuée de façon à ce que les
+fichiers dont les niveaux sonores sont considérés comme aberration
+statistique ne soient pas pris en compte dans la moyenne. Cela est
+très utile si vous avez des albums contenant des slows (c'est le cas
+pour l'auteur) qui fausserait la moyenne.
+	</para>
+</refsect1>
+
+<refsect1 id="mpegadjust">
+<title>MPEG AUDIO ADJUSTMENT</title>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+MP3 files are "adjusted" by setting a <emphasis>relative volume
+adjustment</emphasis> frame in their ID3 tags.  There is a frame for
+this, called "RVA2", that does exactly what we want, and is a native
+frame in ID3v2.4.  Unfortunately, many MP3 players do not support v2.4
+tags (including xmms, as of this writing), and the RVA2 tag is not
+native in previous ID3 versions.  In fact, adding an RVA2 frame to a
+v2.3 tag confuses some MP3 players.  Therefore, we are left with two
+choices when trying to add volume adjustment information to an ID3
+tag:
+<orderedlist>
+<listitem>
+<para>
+Go ahead and upgrade the tag to version 2.4, and use RVA2 tags.  This
+is the default behavior, in the hope that eventually MP3 players will
+support v2.4 tags and this won't be a problem anymore.
+	</para>
+</listitem>
+<listitem>
+<para>
+Upgrade the tag to only version 2.3.  Instead of RVA2, use an "XRVA"
+tag with the same format as an RVA2 tag.  This isn't a native frame,
+but since it starts with an "X", it's considered experimental and
+therefore legal, according to the ID3 spec.  The
+<userinput>--id3-compat</userinput> option turns on this behavior.
+	</para>
+</listitem>
+</orderedlist>
+The disadvantage of the first method is that your MP3 player may no
+longer read the ID3 tags on your files.  Bug the author of your
+favorite MP3 player to support ID3v2.4 tags!
+	</para>
+<para>
+The disadvantage of the second method is that the XRVA frame is only
+recognized by the xmms-rva plugin that is packaged with normalize.  On
+the other hand, I don't know of any MP3 players that recognize the
+RVA2 frame, either, so it may not make any difference.
+	</para>
+<para>
+The other option related to ID3 tags, <userinput>
+--id3-unsync</userinput>, is only necessary for compatibility with old
+MP3 players that don't recognize ID3v2 tags at all.  If your MP3
+player complains of garbage at the start of tagged files, or is unable
+to play the files at all, turn this option on.  This option should
+never hurt, but if your MP3 player knows about ID3v2 tags, you don't
+need it.
+	</para>
+</refsect1>
+
+<refsect1>
+<title>CAVEATS</title>
+<para>
+FIXME: no translation yet
+	</para>
+<para>
+Note that your version of <command>normalize</command> must be
+compiled with MAD library support to analyze MP3 file volume levels.
+	</para>
+</refsect1>
+
+<!--
+<refsect1>
+<title>BUGS</title>
+<para>
+Le pipe "mpg123 -s <file.mp3> | normalize -n -" ne fonctionne pas sur
+les systèmes dits "Big- endian" parce que "mpg123 -s" fournit des
+échantillons en "host byte order", alors que normalize s'attend à des
+échantillons dits "little-endian".  Pour les "big-endian" vous devez
+utilisez "mpg123 -w" et créez un fichier WAV temporaire.
+	</para>
+</refsect1>
+-->
+
+<refsect1>
+<title>AUTEUR</title>
+<para>
+Chris Vaill &lt;chrisvaill@gmail.com&gt;
+<!-- email doesn't render properly for me...
+<author>
+<firstname>Chris</firstname>
+<surname>Vaill</surname>
+<affiliation>
+<address>
+<email>chrisvaill@gmail.com</email>
+</address>
+</affiliation>
+</author>
+-->
+</para>
+</refsect1>
+
+<refsect1>
+<title>CONSULTEZ ÉGALEMENT</title>
+<para>
+sox(1)
+	</para>
+</refsect1>
+
+</refentry>

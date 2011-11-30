@@ -1,0 +1,22 @@
+# -*- text -*-
+%product Normalize
+%copyright 1999--2002 by Chris Vaill
+%vendor Chris Vaill
+%license COPYING
+%readme README
+%description A tool for adjusting the volume of audio files to a standard level
+%version 0.7.7
+
+# Executables
+%system all
+f 0555 root sys /usr/bin/normalize src/normalize
+f 0555 root sys /usr/bin/normalize-mp3 src/normalize-mp3
+l 0000 root sys /usr/bin/normalize-ogg src/normalize-ogg
+
+# Man pages
+f 0444 root sys /usr/share/man/man1/normalize.1 doc/normalize.1
+f 0444 root sys /usr/share/man/man1/normalize-mp3.1 doc/normalize-mp3.1
+
+# Message translations
+f 0444 root sys /usr/share/locale/en_GB/LC_MESSAGES/normalize.mo po/en_GB.gmo
+f 0444 root sys /usr/share/locale/fr/LC_MESSAGES/normalize.mo po/fr.gmo

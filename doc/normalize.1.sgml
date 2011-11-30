@@ -1,0 +1,434 @@
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+
+<!--
+    Copyright (c)  2005  Chris Vaill.
+
+    Permission is granted to copy, distribute, and/or modify this
+    document under the terms of the GNU General Public License as
+    published by the Free Software Foundation; either version 2 of the
+    License, or (at your option) any later version.
+-->
+
+<refentry lang="en">
+
+<!--
+<refentryinfo>
+<date>2003-07-22</date>
+</refentryinfo>
+-->
+
+<refmeta>
+<refentrytitle>
+<application>normalize</application>
+</refentrytitle>
+<manvolnum>1</manvolnum>
+<!-- <refmiscinfo>normalize 1.0</refmiscinfo> -->
+</refmeta>
+
+<refnamediv>
+<refname>
+<application>normalize</application>
+</refname>
+<refpurpose>
+adjusts volume levels of audio files.
+	</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<!-- refsynopsisdivinfo>
+<date>2001-09-16</date>
+</refsynopsisdivinfo -->
+<cmdsynopsis>
+<command>normalize</command>
+<arg><option><replaceable class="parameter">options</replaceable></option></arg>
+<arg><option>--</option></arg>
+<arg choice="req" rep="repeat"><replaceable class="parameter">file</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+<title>DESCRIPTION</title>
+<para>
+<command>normalize</command> is used to adjust the volume of wav audio
+files to a standard volume level.  This is useful for things like
+creating mp3 mixes, where different recording levels on different
+albums can cause the volume to vary greatly from song to song.
+	</para>
+<para>
+<command>normalize</command> operates in two phases.  In the first phase, it
+analyzes the specified files as wav audio files, and computes the
+volume of each file.  In the second phase, it applies a volume
+adjustment to each file to set each file's volume to a standard level.
+	</para>
+<!--
+<para>
+As a special case, the filename "-" will cause
+<command>normalize</command> to read audio data from standard input.
+The data is assumed to be 44.1 kHz, 16 bit little-endian, stereo PCM
+data (i.e. without a WAV header).  If standard input is specified as a
+file, the <userinput>-n</userinput> option is implied.
+	</para>
+-->
+</refsect1>
+
+<refsect1>
+<title>OPTIONS</title>
+<variablelist>
+
+<varlistentry>
+<term>-a, --amplitude=<replaceable class="parameter">AMPLITUDE</replaceable></term>
+<listitem>
+<para>
+Adjust the RMS volume to the target amplitude AMPLITUDE; must be
+between 0.0 and 1.0.  If a number suffixed by "dB" or "dBFS" is
+specified, the amplitude is assumed to be in decibels from full scale.
+The default is -12dBFS.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-b, --batch</term>
+<listitem>
+<para>
+Enable batch mode: see <link linkend="batchmode">BATCH MODE</link>, below.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-c, --compression</term>
+<listitem>
+<para>
+<emphasis>Deprecated</emphasis>.  In previous versions, this enabled
+the limiter, but now the limiter is enabled by default.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--clipping</term>
+<listitem>
+<para>
+Disable the limiter, and just clip any samples that are too large.
+Same effect as -l 0dBFS.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--fractions</term>
+<listitem>
+<para>
+Display all values as decimal fractions instead of in decibels.  By
+default, volume adjustments are shown in decibels, and volume levels
+in dBFS, where 0 dBFS is the level of a square wave of maximum
+amplitude.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-g, --gain=<replaceable class="parameter">GAIN</replaceable></term>
+<listitem>
+<para>
+Skip the volume computation phase: don't compute the volume adjustment
+from the current volumes of the files.  Instead, just apply the given
+gain as a volume adjustment to all files.  As a plain number this is
+just a multiplier applied to all samples, If a number suffixed by "dB"
+is specified, all volumes are adjusted by that many decibels.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--id3-compat</term>
+<listitem>
+<para>
+Use this option when adjusting MPEG audio files if your MP3 player
+does not recognize ID3v2.4 tags.  See <link linkend="mpegadjust">MPEG
+AUDIO ADJUSTMENT</link>, below, for details.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--id3-unsync</term>
+<listitem>
+<para>
+Use this option when adjusting MPEG audio files if your MP3 player
+does not recognize ID3v2 tags and has trouble playing some ID3v2
+tagged MP3 files.  See <link linkend="mpegadjust">MPEG AUDIO
+ADJUSTMENT</link>, below, for details.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-l, --limiter=<replaceable class="parameter">LEVEL</replaceable></term>
+<listitem>
+<para>
+This controls the behavior of the limiter.  By default, all samples
+above -6dBFS (0.5) are limited, but this option sets the limiting
+level to <replaceable>LEVEL</replaceable>. Setting
+<replaceable>LEVEL</replaceable> to 1 (or 0dBFS) does no limiting
+(clipping is done instead); setting <replaceable>LEVEL</replaceable>
+to 0 does limiting on all samples.  The default value is recommended
+unless you know what you're doing.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-m, --mix</term>
+<listitem>
+<para>
+Enable mix mode: see <link linkend="mixmode">MIX MODE</link>, below.
+Batch mode and mix mode are mutually exclusive.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-n, --no-adjust</term>
+<listitem>
+<para>
+Compute and output the volume adjustment that would set the volume to
+the target, but don't apply it to any of the files (i.e. skip the
+second phase).  If you use this option, your files will not be altered
+in any way.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--no-progress</term>
+<listitem>
+<para>
+Don't print any progress information.  All other messages are printed
+as normal according to the verbosity level.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--peak</term>
+<listitem>
+<para>
+Adjust using peak levels instead of RMS levels.  Each file will be
+adjusted so that its maximum sample is at full scale.  This just gives
+a file the maximum volume possible without clipping; no normalization
+is done.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-q, --quiet</term>
+<listitem>
+<para>
+Don't output progress information.  Only error messages are printed.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-t, --average-threshold=<replaceable class="parameter">THRESHOLD</replaceable></term>
+<listitem>
+<para>
+When averaging volume levels for batch mode or mix mode, throw out any
+volumes that are more than <replaceable>THRESHOLD</replaceable>
+decibels from the average.  A high value here (say, 50) will make sure
+that the volumes of all files are considered in the average.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-T, --adjust-threshold=<replaceable class="parameter">THRESHOLD</replaceable></term>
+<listitem>
+<para>
+If an adjustment to be made to a file is smaller than
+<replaceable>THRESHOLD</replaceable> decibels, consider the file
+already normalized and don't do the adjustment.  This is 0.125 by
+default, or 0 if the <userinput>-g</userinput> option is given.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-v, --verbose</term>
+<listitem>
+<para>
+Increase verbosity.  This option can be repeated for more messages.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-w, --output-bitwidth</term>
+<listitem>
+<para>
+Force output files to have samples that are W bits wide.  This option
+is ignored when adjusting MP3 files.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-h, --help</term>
+<listitem>
+<para>
+Display usage information and exit.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-V, --version</term>
+<listitem>
+<para>
+Print version information and exit.
+	</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>--</term>
+<listitem>
+<para>
+Terminate option list.
+	</para>
+</listitem>
+</varlistentry>
+
+</variablelist>
+</refsect1>
+
+<refsect1 id="mixmode">
+<title>MIX MODE</title>
+<para>
+This mode is made especially for making mixed CD's and the like.  You
+want every song on the mix to be the same volume, but it doesn't
+matter if they are the same volume as the songs on some other mix you
+made last week.  In mix mode, average level of all the files is
+computed, and each file is separately normalized to this average
+volume.
+	</para>
+</refsect1>
+
+<refsect1 id="batchmode">
+<title>BATCH MODE</title>
+<para>
+When operating on a group of unrelated files, you usually want all of
+them at the same level, and this is the default behavior.  However, a
+group of music files all from the same album is generally meant to be
+listened to at the relative volumes they were recorded at.  In batch
+mode, all the specified files are considered to be part of a single
+album and their relative volumes are preserved.  This is done by
+averaging the volumes of all the files, computing a single adjustment
+from that, and applying the same adjustment to all the files.  Some
+analysis is also done so that files with volumes that appear to be
+statistical aberrations are not considered in the average.  This is
+useful if you have albums (like many of the author's) in which there
+is one "quiet song" that throws off the average.
+	</para>
+</refsect1>
+
+<refsect1 id="mpegadjust">
+<title>MPEG AUDIO ADJUSTMENT</title>
+<para>
+MP3 files are "adjusted" by setting a <emphasis>relative volume
+adjustment</emphasis> frame in their ID3 tags.  There is a frame for
+this, called "RVA2", that does exactly what we want, and is a native
+frame in ID3v2.4.  Unfortunately, many MP3 players do not support v2.4
+tags, and the RVA2 tag is not native in previous ID3 versions.  In
+fact, adding an RVA2 frame to a v2.3 tag confuses some MP3 players.
+Therefore, we are left with two choices when trying to add volume
+adjustment information to an ID3 tag:
+<orderedlist>
+<listitem>
+<para>
+Go ahead and upgrade the tag to version 2.4, and use RVA2 tags.  This
+is the default behavior, in the hope that eventually MP3 players will
+support v2.4 tags and this won't be a problem anymore.
+	</para>
+</listitem>
+<listitem>
+<para>
+Upgrade the tag to only version 2.3.  Instead of RVA2, use an "XRVA"
+tag with the same format as an RVA2 tag.  This isn't a native frame,
+but since it starts with an "X", it's considered experimental and
+therefore legal, according to the ID3 spec.  The
+<userinput>--id3-compat</userinput> option turns on this behavior.
+	</para>
+</listitem>
+</orderedlist>
+The disadvantage of the first method is that your MP3 player may no
+longer read the ID3 tags on your files.  Bug the author of your
+favorite MP3 player to support ID3v2.4 tags!
+	</para>
+<para>
+The disadvantage of the second method is that the XRVA frame is only
+recognized by the xmms-rva plugin that is packaged with normalize.  On
+the other hand, I don't know of any MP3 players that recognize the
+RVA2 frame, either, so it may not make any difference.
+	</para>
+<para>
+The other option related to ID3 tags,
+<userinput>--id3-unsync</userinput>, is only necessary for
+compatibility with old MP3 players that don't recognize ID3v2 tags at
+all.  If your MP3 player complains of garbage at the start of tagged
+files, or is unable to play the files at all, turn this option on.
+This option should never hurt, but if your MP3 player knows about
+ID3v2 tags, you don't need it.
+	</para>
+</refsect1>
+
+<refsect1>
+<title>CAVEATS</title>
+<para>
+Note that your version of <command>normalize</command> must be
+compiled with MAD library support to analyze MP3 file volume levels.
+	</para>
+</refsect1>
+
+<!--
+<refsect1>
+<title>BUGS</title>
+<para>
+The pipe "mpg123 -s <filename>file.mp3</filename> | normalize -n -"
+doesn't work on big-endian systems because "mpg123 -s" spits out
+samples in host byte order, and normalize expects little-endian
+samples.  On big-endian machines you have to use "mpg123 -w" and write
+to a temporary WAV file.
+	</para>
+</refsect1>
+-->
+
+<refsect1>
+<title>AUTHOR</title>
+<para>
+Chris Vaill &lt;chrisvaill@gmail.com&gt;
+<!-- email doesn't render properly for me...
+<author>
+<firstname>Chris</firstname>
+<surname>Vaill</surname>
+<affiliation>
+<address>
+<email>chrisvaill@gmail.com</email>
+</address>
+</affiliation>
+</author>
+-->
+</para>
+</refsect1>
+
+<refsect1>
+<title>SEE ALSO</title>
+<para>
+sox(1)
+	</para>
+</refsect1>
+
+</refentry>

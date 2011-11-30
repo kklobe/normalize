@@ -1,0 +1,42 @@
+                                -*- text -*-
+
+The following people (in no particular order) have my gratitude for
+their help with normalize:
+
+Anyone that has sent me a bug report!
+
+For Debian package maintenance and the normalize-mp3 man page:
+  Eduardo Maçan
+
+For code and suggestions regarding output bitwidth and audio
+dithering:
+  Phillip Berndt
+
+For the French translations that don't suck
+(the ones that suck are the author's fault):
+  LionStorm
+  Alex Marandon
+
+For suggestions and help with the normalize-mp3 script:
+  Dan Mueth
+
+For frontend integration suggestions:
+  Erick Calder
+
+For limiter/compression suggestions:
+  Ted Wright
+
+For OS/2 porting, code and information:
+  Chris Wohlgemuth
+  Klaus Staedtler-Przyborski
+  Michel Such
+
+For Windows code and information:
+  Deneb Meketa
+
+For Windows NT makefiles and config help:
+  Simon Haines
+  Alex Wetmore
+
+For bugfixes:
+  Bruce Oberg
