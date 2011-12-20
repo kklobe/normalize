@@ -5,12 +5,12 @@ LC_NUMERIC=POSIX
 export LC_ALL LC_NUMERIC
 
 # correct answers
-MONO_BEFORE=1f6586aa8a849a3bd8b24b42eb9e3f63
-STEREO_BEFORE=24d9a4de01f11c0a4e37c1f0fedb1675
+MONO_BEFORE=6557f9f2212baac35c31ece87c5b294b61598540
+STEREO_BEFORE=da97dd1ed748fb40901b6b9d2b46362a549f97c7
 LVL_MONO="-6.0206dBFS  -3.0104dBFS  -5.9794dB  mono.wav"
 LVL_STEREO="-6.0206dBFS  -3.0104dBFS  -5.9794dB  stereo.wav"
-MONO_AFTER=1553f2c735477f1de783365db1bec012
-STEREO_AFTER=cf7581a8924eb3b29b93e93bc6a9f7dc
+MONO_AFTER=72be935c3517f85a326751bb3177d694d0853c82
+STEREO_AFTER=2755af6e4f9b834afa771a8ad436ef4bc6a26412
 
 exec 3>> test.log
 echo "Testing 24-bit wavs..." >&3
@@ -19,12 +19,12 @@ echo "Testing 24-bit wavs..." >&3
 ../src/mktestwav -a 0.5 -b 3 -c 2 stereo.wav
 
 # Check that the files written by mktestwav are correct
-CHKSUM=`tail -c +44 mono.wav | md5sum`
+CHKSUM=`tail -c +44 mono.wav | shasum`
 case "$CHKSUM" in
     $MONO_BEFORE*) ;;
     *) echo "FAIL: created mono.wav has bad checksum!" >&3; exit 1 ;;
 esac
-CHKSUM=`tail -c +44 stereo.wav | md5sum`
+CHKSUM=`tail -c +44 stereo.wav | shasum`
 case "$CHKSUM" in
     $STEREO_BEFORE*) ;;
     *) echo "FAIL: created stereo.wav has bad checksum!" >&3; exit 1 ;;
@@ -53,12 +53,12 @@ echo "mono.wav and stereo.wav measured successfully..." >&3
 # Check that normalize correctly normalizes the volume of the files
 ../src/normalize -q mono.wav
 ../src/normalize -q stereo.wav
-CHKSUM=`tail -c +44 mono.wav | md5sum`
+CHKSUM=`tail -c +44 mono.wav | shasum`
 case "$CHKSUM" in
     $MONO_AFTER*) ;;
     *) echo "FAIL: adjusted mono.wav has bad checksum!" >&3; exit 1 ;;
 esac
-CHKSUM=`tail -c +44 stereo.wav | md5sum`
+CHKSUM=`tail -c +44 stereo.wav | shasum`
 case "$CHKSUM" in
     $STEREO_AFTER*) ;;
     *) echo "FAIL: adjusted stereo.wav has bad checksum!" >&3; exit 1 ;;
